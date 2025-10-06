@@ -71,7 +71,7 @@ def train_ppo_unity_baseline(env_path: str,
 
 def main():
     # Get the exe path
-    pacman_exe ="../Pacman-Unity_AiPerCog/windows/AiPerPacman.exe"
+    pacman_exe ="./pacman_builds/small_obs/AiPerPacman.exe"
     # Make config so that we can track variables like what obs was being used as well as hyperparams
 
     #Check devices for training

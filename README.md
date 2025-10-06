@@ -1,4 +1,4 @@
-# Pacman 
+# Pacman-RL
 ## Overview
 
 ## Structure

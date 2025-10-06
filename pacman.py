@@ -7,7 +7,7 @@ from mlagents_envs.envs.unity_gym_env import UnityToGymWrapper
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    unity_env = UnityEnvironment(file_name="../Pacman-Unity_AiPerCog/windows/AiPerPacman.exe", no_graphics=False)
+    unity_env = UnityEnvironment(file_name="./pacman_builds/small_obs/AiPerPacman.exe", no_graphics=False)
     env = UnityToGymWrapper(unity_env, allow_multiple_obs=False)
     print(env.observation_space)
 
