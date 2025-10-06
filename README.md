@@ -1,8 +1,10 @@
 # Pacman-RL
-## Overview
-
+The purpose of this repo is to conduct RL on Pacman, and create different play-style
+behaviours. See [Pacman-Unity_AiPerCog](https://github.com/PipaFlores/Pacman-Unity_AiPerCog) for more info
 ## Structure
-
+The `pacman_builds` folder contains different pacman executables used for training and are distiguished by the observation
+space used. At the moment only `small_obs` is present, and the observation is just Pacmans loacation and movement 
+direction.
 ## Installation & Setup
 Create a conda environment using the following command
 ```
@@ -13,11 +15,11 @@ From the repo file location run the following command
 git clone --branch release_23 https://github.com/Unity-Technologies/ml-agents.git
 ```
 If you want to train using GPU, your will need to install Pytorch before installing `mlagents`. To install m
-Pytorch with GPU (windows). Activate the `pacman conda` environment and run the follwoing:
+Pytorch with GPU (windows). Activate the `pacman conda` environment and run the following:
 ```
 pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 ```
-To intsall `mlagents` Python package, activate the conda environment and run the following in the command line
+To install `mlagents` Python package, activate the conda environment and run the following in the command line
 ```
 cd /path/to/ml-agents
 python -m pip install ./ml-agents-envs
