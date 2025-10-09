@@ -5,6 +5,7 @@ from pprint import pprint
 # from baselines
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
+from stable_baselines3.common.monitor import Monitor
 
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.envs.unity_gym_env import UnityToGymWrapper
@@ -47,12 +48,12 @@ def train_ppo_unity_baseline(env_path: str,
 
     # Callbacks
     checkpoint_callback = CheckpointCallback(save_freq=checkpoint_freq, save_path=model_save_path, name_prefix="ppo_model")
-    # eval_callback = EvalCallback(eval_env=env,
+    # eval_callback = EvalCallback(eval_env=Monitor(env),
     #                              best_model_save_path=model_save_path + "/best_model",
     #                              log_path=model_save_path + "/logs",
     #                              eval_freq=eval_freq,
     #                              n_eval_episodes=n_eval_episodes,
-    #                              deterministic=True)
+    #                              deterministic=True) look at this https://stackoverflow.com/questions/75415737/accessing-training-metrics-in-stable-baselines3
 
     # Create PPO model
     model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=os.path.join(model_save_path, "tensorboard"),device='cuda')
