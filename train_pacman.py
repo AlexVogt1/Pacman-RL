@@ -1,6 +1,7 @@
 import gym
 import os
 import torch
+import wandb
 from pprint import pprint
 # from baselines
 from stable_baselines3 import PPO
@@ -29,7 +30,8 @@ def train_ppo_unity_baseline(env_path: str,
                              timesteps: int = 1_000_000,
                              eval_freq: int = 10_000,
                              n_eval_episodes: int = 5,
-                             checkpoint_freq: int = 50_000):
+                             checkpoint_freq: int = 50_000,
+                             config: dict = None):
     """
     Train a PPO agent in a Unity environment.
 
@@ -43,7 +45,7 @@ def train_ppo_unity_baseline(env_path: str,
     """
 
     # Load Unity Environment
-    unity_env = UnityEnvironment(file_name=env_path, no_graphics=False)
+    unity_env = UnityEnvironment(file_name=env_path, no_graphics=True)
     env = UnityToGymWrapper(unity_env, allow_multiple_obs=False,flatten_branched=True)
 
     # Callbacks
@@ -53,10 +55,12 @@ def train_ppo_unity_baseline(env_path: str,
     #                              log_path=model_save_path + "/logs",
     #                              eval_freq=eval_freq,
     #                              n_eval_episodes=n_eval_episodes,
-    #                              deterministic=True) look at this https://stackoverflow.com/questions/75415737/accessing-training-metrics-in-stable-baselines3
+    #                              deterministic=True) #look at this https://stackoverflow.com/questions/75415737/accessing-training-metrics-in-stable-baselines3
 
     # Create PPO model
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=os.path.join(model_save_path, "tensorboard"),device='cuda')
+    model = PPO("MlpPolicy", env,
+                learning_rate=config['learning_rate'],
+                verbose=1, tensorboard_log=os.path.join(model_save_path, "tensorboard"),device='cuda')
 
     # Train
     model.learn(total_timesteps=timesteps, callback=[checkpoint_callback])
@@ -72,22 +76,37 @@ def train_ppo_unity_baseline(env_path: str,
 
 def main():
     # Get the exe path
-    pacman_exe ="./pacman_builds/small_obs/AiPerPacman.exe"
+    pacman_exe ="./pacman_builds/data_obs_headless_bigger_reward/AiPerPacman.exe"
     # Make config so that we can track variables like what obs was being used as well as hyperparams
 
     #Check devices for training
     check_avaliable_devices()
 
+    #Training config
+    training_config={
+        'learning_rate': 3e-4,
+    }
+
     # train the Agent
     train_ppo_unity_baseline(env_path=pacman_exe,
-                           model_save_path="baseline_model",
-                           timesteps=1_000_000,
-                           eval_freq=2_000,
-                           n_eval_episodes=5,
-                           checkpoint_freq=6_000)
+                            model_save_path="baseline_model",
+                            timesteps=1_000_000,
+                            eval_freq=2_000,
+                            n_eval_episodes=1,
+                            checkpoint_freq=10_000,
+                            config=training_config)
 
 
 
 
 if __name__ == '__main__':
-  main()
+    wandb_config ={
+        'project': "pacman-rl-test",
+        'name': "pacman-rl-first-train",
+        'description': "Initial training using headless",
+        'learning_rate': 3e-4,
+    }
+    print(wandb_config)
+    wandb.init(project=wandb_config['project'], name=wandb_config['name'],notes=wandb_config['description'],config=wandb_config, sync_tensorboard=True)
+    main()
+    wandb.finish()
