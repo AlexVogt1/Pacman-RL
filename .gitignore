@@ -1,3 +1,9 @@
-*baseline_model/
+logs/baseline_model/
 *ml-agents/
 *wandb/
+logs/
+*.db
+*.zip
+pacman_builds/*
+!pacman_builds/grid_data_obs
+runs/
