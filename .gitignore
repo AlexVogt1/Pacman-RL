@@ -4,9 +4,7 @@ logs/baseline_model/
 logs/
 *.db
 *.zip
-!pacman_builds/linux/grid_data_obs
-!pacman_builds/linux/grid_data_obs_server
-# pacman_builds/
+pacman_builds/*
 !pacman_builds/grid_data_obs
 !pacman_builds/linux/grid_data_obs
 !pacman_builds/linux/grid_data_obs_server
