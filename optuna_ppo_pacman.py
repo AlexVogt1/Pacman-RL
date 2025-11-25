@@ -1,6 +1,7 @@
 import optuna
-from optuna.pruners import MedianPruner
+from optuna.pruners import MedianPruner, PatientPruner, PercentilePruner
 from optuna.samplers import TPESampler
+import os
 import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -234,14 +235,23 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
     # MOST IMPORTANT HYPERPARAMETERS FOR PPO
 
     # 1. Learning rate - affects convergence speed
-    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
+    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3)
 
     # 2. Number of steps per update - critical for PPO performance
     # With 2000-step episodes: 512=1/4 episode, 2048=1 episode, 4096=2 episodes
-    n_steps = trial.suggest_categorical("n_steps", [64, 128, 256, 512, 1024, 2048])
+    n_steps = trial.suggest_categorical("n_steps", [128, 256, 512, 1024, 2048])
 
-    # 3. Batch size - must be <= n_steps, affects gradient quality
-    batch_size = trial.suggest_categorical("batch_size", [64, 128, 256, 512])
+    # 3. Batch size must be <= n_steps, affects gradient quality
+    valid_batch_sizes = [bs for bs in [32, 64, 128, 256, 512] if bs <= n_steps]
+    if valid_batch_sizes:
+        # Sample from valid options
+        batch_size = trial.suggest_categorical("batch_size_resampled", valid_batch_sizes)
+        # if trial.number == 0 or trial.number % 10 == 0:  # Log occasionally to avoid spam
+        #     print(f"Trial {trial.number}: Resampled batch_size to {batch_size} (n_steps={n_steps})")
+    else:
+        # Fallback: use n_steps as batch_size
+        batch_size = n_steps
+        print(f"Trial {trial.number}: Using batch_size={n_steps} (same as n_steps)")
 
     # 4. Number of epochs - how many times to reuse collected data
     n_epochs = trial.suggest_int("n_epochs", 5, 20)
@@ -265,7 +275,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
     max_grad_norm = trial.suggest_float("max_grad_norm", 0.3, 2.0)
 
     # 11. Network architecture - model capacity
-    net_arch_type = trial.suggest_categorical("net_arch", ["small", "medium", "large"])
+    net_arch_type = trial.suggest_categorical("net_arch", ['XX-large', 'extra_large_deep', 'huge', 'massive'])
     net_arch_map = {
         "small": [dict(pi=[64, 64], vf=[64, 64])],
         "medium": [dict(pi=[128, 128], vf=[128, 128])],
@@ -273,6 +283,9 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
         "extra-large": [dict(pi=[512, 512], vf=[512, 512])],
         "XX-large": [dict(pi=[1024, 1024], vf=[512, 512])],
         "XXX-large": [dict(pi=[2048, 2048], vf=[512,512])],
+        "extra_large_deep": [dict(pi=[512, 512, 256], vf=[512, 512, 256])],
+        "huge": [dict(pi=[1024, 512, 256], vf=[1024, 512, 256])],
+        "massive": [dict(pi=[2048, 1024, 512], vf=[2048, 1024, 512])]
     }
     net_arch = net_arch_map[net_arch_type]
 
@@ -341,11 +354,13 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
             callbacks.append(wandb_callback)
 
         # Evaluation callback with pruning
+        target_eval_freq = 50000
+        correct_eval_freq = target_eval_freq // NUM_ENVS
         eval_callback = TrialEvalCallback(
             eval_env,
             trial,
-            n_eval_episodes=3,
-            eval_freq=10000,
+            n_eval_episodes=8,
+            eval_freq=correct_eval_freq,
             deterministic=True,
             use_wandb=use_wandb
         )
@@ -362,7 +377,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
         mean_reward, std_reward = evaluate_policy(
             model,
             eval_env,
-            n_eval_episodes=5,
+            n_eval_episodes=10,
             deterministic=True
         )
 
@@ -507,7 +522,7 @@ class TrialEvalCallback(EvalCallback):
         return mean_reward, std_reward, mean_custom_metric
 
 
-def optimize_hyperparameters(n_trials=100, n_jobs=1, study_name="ppo_pacman",
+def optimize_hyperparameters(n_trials=100,timeout=None, n_jobs=1, study_name="ppo_pacman",
                              wandb_project="ppo-pacman-optuna", use_wandb=True):
     """Run hyperparameter optimization."""
 
@@ -517,20 +532,54 @@ def optimize_hyperparameters(n_trials=100, n_jobs=1, study_name="ppo_pacman",
     # Create study
     sampler = TPESampler(n_startup_trials=10, seed=42)
     pruner = MedianPruner(n_startup_trials=5, n_warmup_steps=3)
+    pruner_config = PatientPruner(
+        PercentilePruner(percentile=50.0, n_warmup_steps=3), # i report eval id not steps so 3 * 50 000 = 150000
+        patience=1
+    )
+
+    # Create/Load the study
+    db_name = f"{study_name}.db"
+    # db_name = "pacman_optuna.db"
+
+    if os.name == 'nt':  # 'nt' means Windows
+        # WINDOWS FIX: Force DB to live with the script to avoid path issues
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(script_dir)
+        db_path = os.path.join(script_dir, db_name)
+    else:
+        # LINUX/CLUSTER: Do NOT change directory.
+        # Assume the user submitted the job from a writable Scratch folder.
+        # Just use the current working directory.
+        db_path = os.path.join(os.getcwd(), db_name)
+
+    # Create URL (Handle slashes for SQLAlchemy)
+    db_path = db_path.replace("\\", "/")
+    storage_path = f"sqlite:///{db_path}"
 
     study = optuna.create_study(
         study_name=study_name,
         direction="maximize",
         sampler=sampler,
-        pruner=pruner,
-        storage=f"sqlite:///optuna_search/{study_name}.db",
+        pruner=pruner_config,
+        storage=storage_path,
         load_if_exists=True
     )
+    # Check that trials will be saved before running study save time
+    print(f"Checking database write permissions for {storage_path}...")
+    try:
+        # This forces a tiny write operation to the DB immediately
+        study.set_user_attr("db_check", "writable")
+        print("SUCCESS: Database is writable. Starting training...")
+    except Exception as e:
+        print(f"CRITICAL ERROR: Cannot write to database. Stopping now.")
+        print(f"Error details: {e}")
+        exit(1)  # Kill the script immediately
 
     try:
         study.optimize(
             lambda trial: objective(trial, wandb_project=wandb_project, use_wandb=use_wandb),
             n_trials=n_trials,
+            timeout=timeout,
             n_jobs=n_jobs,
             show_progress_bar=True
         )
@@ -583,7 +632,6 @@ def optimize_hyperparameters(n_trials=100, n_jobs=1, study_name="ppo_pacman",
     except ImportError:
         print("\nNote: Install plotly for visualizations: pip install plotly")
 
-    print("=" * 70 + "\n")
 
     return study
 
@@ -591,14 +639,15 @@ def optimize_hyperparameters(n_trials=100, n_jobs=1, study_name="ppo_pacman",
 if __name__ == "__main__":
     # Configuration
     USE_WANDB = True  # Set to False to disable W&B logging
-    WANDB_PROJECT = "ppo-pacman-optuna-search"
-    N_TRIALS = 50  # Number of hyperparameter combinations to try
+    WANDB_PROJECT = "ppo-pacman-optuna-search-dump"
+    N_TRIALS = None  # Number of hyperparameter combinations to try. None allows to use clock better for working on cluster
 
     # Run optimization
     study = optimize_hyperparameters(
         n_trials=N_TRIALS,
+        timeout = 257400,
         n_jobs=1,  # Set to -1 to use all CPU cores (requires parallel environments)
-        study_name="ppo_pacman_optuna_optimization",
+        study_name="ppo_pacman_optuna_optimization_1",
         wandb_project=WANDB_PROJECT,
         use_wandb=USE_WANDB
     )

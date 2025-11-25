@@ -1,5 +1,7 @@
 import gym
 import os
+import argparse
+import json
 from typing import Callable, Any
 from pathlib import Path
 import torch
@@ -499,6 +501,12 @@ def train_ppo_unity_baseline(env_path: str,
     print(f"Training complete. Model saved to {model_save_path}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser("Pacman Training")
+    parser.add_argument("--json_path", type=str, default="./exp/base/exp_001.json",
+                        help="directory for expeiment parameters")
+
+    return parser.parse_args()
 def main(config: dict):
 
     # Make config so that we can track variables like what obs was being used as well as hyperparams
@@ -519,12 +527,11 @@ def main(config: dict):
 
 
 if __name__ == '__main__':
+    args = parse_args()
+    with open(f"{args.json_path}.json", 'r') as f:
+        config = json.load(f)
     # wandb config
-    wandb_config ={
-        'project': "pacman-rl-test",
-        'name': "pacman-rl-PPO-optimal",
-        'description': "training with Grid obs new reward",
-    }
+    wandb_config = config["exp_config"]
     dqn_config = {
         "policy": "MlpPolicy",
         "learning_rate": 1e-3,
@@ -552,32 +559,33 @@ if __name__ == '__main__':
         "device": "cuda",
         "_init_setup_model": True
     }
-    ppo_config = {
-        "learning_rate": 0.0008541161764262368,
-        "n_steps": 512,
-        "batch_size": 64,
-        "n_epochs": 18,
-        "gamma": 0.9991964773396101,
-        "gae_lambda": 0.9011887172355716,
-        "clip_range": 0.18185377161463595,
-        "clip_range_vf": None,
-        "normalize_advantage": True,
-        "ent_coef": 0.00697442595256507,
-        "vf_coef": 0.6757818160485769,
-        "max_grad_norm": 1.0134150593938502,
-        "use_sde": False,
-        "sde_sample_freq": -1,
-        "rollout_buffer_class": None,
-        "rollout_buffer_kwargs": None,
-        "target_kl": None,
-        "stats_window_size": 100,
-        "tensorboard_log": None,
-        "policy_kwargs": {"net_arch":  [dict(pi=[256, 256], vf=[256, 256])]},
-        "verbose": 0,
-        "seed": None,
-        "device": 'auto',
-        "_init_setup_model": True
-    }
+    # ppo_config = {
+    #     "learning_rate": 0.0008541161764262368,
+    #     "n_steps": 512,
+    #     "batch_size": 64,
+    #     "n_epochs": 18,
+    #     "gamma": 0.9991964773396101,
+    #     "gae_lambda": 0.9011887172355716,
+    #     "clip_range": 0.18185377161463595,
+    #     "clip_range_vf": None,
+    #     "normalize_advantage": True,
+    #     "ent_coef": 0.00697442595256507,
+    #     "vf_coef": 0.6757818160485769,
+    #     "max_grad_norm": 1.0134150593938502,
+    #     "use_sde": False,
+    #     "sde_sample_freq": -1,
+    #     "rollout_buffer_class": None,
+    #     "rollout_buffer_kwargs": None,
+    #     "target_kl": None,
+    #     "stats_window_size": 100,
+    #     "tensorboard_log": None,
+    #     "policy_kwargs": {"net_arch":  [dict(pi=[256, 256], vf=[256, 256])]},
+    #     "verbose": 0,
+    #     "seed": None,
+    #     "device": 'auto',
+    #     "_init_setup_model": True
+    # }
+    ppo_config= config["ppo_config"]
     config = {
         "wandb_config": wandb_config,
         "pacman_exe_path":"./pacman_builds/grid_data_obs/AiPerPacman.exe",

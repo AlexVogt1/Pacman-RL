@@ -1,0 +1,23 @@
+{
+  "exp_config": {
+    "project": "pacman-rl-test",
+    "name": "pacman-rl-PPO-optimal",
+    "description": "training with Grid obs new reward",
+    "pacman_path": "./pacman_builds/complete_grid_data_obs/AiPerPacman.exe"
+  },
+  "ppo_config":{
+    "learning_rate": 0.0006990621869504165,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 18,
+    "gamma": 0.9534616960108563,
+    "gae_lambda": 0.9343134125713539,
+    "clip_range": 0.28569923127458147,
+    "ent_coef": 0.0003454485588167861,
+    "vf_coef": 0.8739347300355585,
+    "max_grad_norm": 1.783894506233313,
+    "net_arch": {
+      "pi": [1024, 512, 256],
+      "vf": [1024, 512, 256]}
+  }
+}

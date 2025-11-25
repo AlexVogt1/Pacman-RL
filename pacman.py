@@ -7,7 +7,7 @@ from mlagents_envs.envs.unity_gym_env import UnityToGymWrapper
 from wrappers import wrap_env
 
 def check_pellet_grid(obs: np.ndarray):
-    grid = obs[30:]
+    grid = obs[34:]
     grid1 = grid.reshape((29,26))
 
     np.savetxt("./grid_29_26.txt", grid1.astype(int), fmt="%i",delimiter="")
@@ -15,8 +15,8 @@ def check_pellet_grid(obs: np.ndarray):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     print("anything")
-    unity_env = UnityEnvironment(file_name="./pacman_builds/grid_data_obs/AiPerPacman.exe", no_graphics=False,worker_id=1)
-    # unity_env = UnityEnvironment(file_name="../Pacman-Unity_AiPerCog/windows/AiPerPacman.exe", no_graphics=False,worker_id=3) # path to unity build for faster debugging of observation space
+    # unity_env = UnityEnvironment(file_name="./pacman_builds/full_grid_data_obs/AiPerPacman.exe", no_graphics=False,worker_id=1)
+    unity_env = UnityEnvironment(file_name="../Pacman-Unity_AiPerCog/windows/AiPerPacman.exe", no_graphics=False,worker_id=3) # path to unity build for faster debugging of observation space
     env = UnityToGymWrapper(unity_env, allow_multiple_obs=False)
     env=wrap_env(env, skip=4)
     print(env.observation_space)
