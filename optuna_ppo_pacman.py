@@ -235,7 +235,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
     # MOST IMPORTANT HYPERPARAMETERS FOR PPO
 
     # 1. Learning rate - affects convergence speed
-    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3)
+    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
 
     # 2. Number of steps per update - critical for PPO performance
     # With 2000-step episodes: 512=1/4 episode, 2048=1 episode, 4096=2 episodes
@@ -254,7 +254,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
         print(f"Trial {trial.number}: Using batch_size={n_steps} (same as n_steps)")
 
     # 4. Number of epochs - how many times to reuse collected data
-    n_epochs = trial.suggest_int("n_epochs", 5, 20)
+    n_epochs = trial.suggest_int("n_epochs", 3, 30)
 
     # 5. Gamma - discount factor for long-term rewards
     gamma = trial.suggest_float("gamma", 0.95, 0.9999, log=True)
@@ -275,7 +275,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
     max_grad_norm = trial.suggest_float("max_grad_norm", 0.3, 2.0)
 
     # 11. Network architecture - model capacity
-    net_arch_type = trial.suggest_categorical("net_arch", ['XX-large', 'extra_large_deep', 'huge', 'massive'])
+    net_arch_type = trial.suggest_categorical("net_arch", ['extra_large', 'XX-large', 'XXX-large', 'extra_large_deep', 'huge', 'massive'])
     net_arch_map = {
         "small": [dict(pi=[64, 64], vf=[64, 64])],
         "medium": [dict(pi=[128, 128], vf=[128, 128])],

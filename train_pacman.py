@@ -345,8 +345,15 @@ class CustomMetricEvalCallback(EvalCallback):
                     self.best_mean_reward = mean_reward
 
                     # Save best model
+                    # Check if path exists
                     if self.best_model_save_path is not None:
-                        self.model.save(f"{self.best_model_save_path}/best_model")
+                        # Check directory exists
+                        os.makedirs(self.best_model_save_path, exist_ok=True)
+                        # Save new best model to path
+                        save_path = os.path.join(self.best_model_save_path, "best_model")
+                        self.model.save(save_path)
+                        if self.verbose > 0:
+                            print(f"Saved model to {save_path}")
 
                     # Trigger callback
                     if self.callback is not None:
@@ -458,8 +465,8 @@ def train_ppo_unity_baseline(env_path: str,
     checkpoint_callback = CheckpointCallback(save_freq=checkpoint_freq, save_path=model_save_path, name_prefix="ppo_model")
     eval_callback = CustomMetricEvalCallback(
         eval_env=eval_env,
-        n_eval_episodes=10,
-        eval_freq=10000,
+        n_eval_episodes=n_eval_episodes,
+        eval_freq=eval_freq,
         best_model_save_path=f"./{model_save_path}/models",
         log_path=f"./{model_save_path}/evaluations",
         use_wandb=True,
@@ -513,12 +520,14 @@ def main(config: dict):
 
     #Check devices for training
     check_avaliable_devices()
+    target_freq= 50_000
+    correct_freq= target_freq // NUM_ENVS
 
     # train the Agent
     train_ppo_unity_baseline(env_path=config['pacman_exe_path'],
                             model_save_path=config["model_save_path"],
-                            timesteps=4_000_000,
-                            eval_freq=10_000,
+                            timesteps=2_000_000,
+                            eval_freq=correct_freq,
                             n_eval_episodes=10,
                             checkpoint_freq=100_000,
                             config=config["ppo_config"])
@@ -588,12 +597,14 @@ if __name__ == '__main__':
     ppo_config= config["ppo_config"]
     config = {
         "wandb_config": wandb_config,
-        "pacman_exe_path":"./pacman_builds/grid_data_obs/AiPerPacman.exe",
+        "pacman_exe_path":wandb_config["pacman_path"],
         "model_save_path": f"./logs/{wandb_config['project']}/{wandb_config['name']}",
-        "dqn_config": dqn_config,
+        # "dqn_config": dqn_config,
         "ppo_config": ppo_config,
     }
+    print(config)
     ENV_PATH = config["pacman_exe_path"]
+    os.makedirs(config["model_save_path"], exist_ok=True)
     print(wandb_config)
     wandb.init(project=wandb_config['project'], name=wandb_config['name'],notes=wandb_config['description'],config=config, sync_tensorboard=True)
     main(config)

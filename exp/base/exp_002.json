@@ -2,8 +2,8 @@
   "exp_config": {
     "project": "pacman-rl-test",
     "name": "pacman-rl-PPO-optimal",
-    "description": "Training best agent from original cluster optuna search on binary grid obs",
-    "pacman_path": "./pacman_builds/linux/grid_data_obs_server/AiPerPacman.x86_64"
+    "description": "Training best agent from original cluster optuna search on full integer grid obs",
+    "pacman_path": "./pacman_builds/linux/full_grid_data_obs_server/AiPerPacman.x86_64"
   },
   "ppo_config":{
     "learning_rate": 0.0006990621869504165,
