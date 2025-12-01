@@ -1,0 +1,26 @@
+{
+  "exp_config": {
+    "project": "pacman-rl-cluster",
+    "name": "pacman-rl-PPO-Trail-Pellet-19",
+    "description": "Training trail 19 from cluster optuna search on full obs and increased pellet reward of 15",
+    "pacman_path": "./pacman_builds/linux/full_grid_data_obs_reward_server/AiPerPacman.x86_64"
+  },
+  "ppo_config":{
+    "learning_rate": 0.0001993110632823524,
+    "n_steps": 2048,
+    "batch_size": 32,
+    "n_epochs": 23,
+    "gamma": 0.9502265242023716,
+    "gae_lambda": 0.9161971926176925,
+    "clip_range": 0.21161201969312682,
+    "ent_coef": 1.1733663087581604e-06,
+    "vf_coef": 0.9935830402965663,
+    "max_grad_norm": 1.751129028782947,
+    "policy_kwargs": {
+        "net_arch": {
+            "pi": [2048, 1024, 512],
+            "vf": [2048, 1024, 512]
+        }
+    }
+  }
+}

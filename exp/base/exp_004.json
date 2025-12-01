@@ -1,0 +1,26 @@
+{
+  "exp_config": {
+    "project": "pacman-rl-cluster",
+    "name": "pacman-rl-PPO-Trail-54",
+    "description": "Training best agent from original cluster optuna search on binary grid obs",
+    "pacman_path": "./pacman_builds/linux/grid_data_obs_server/AiPerPacman.x86_64"
+  },
+  "ppo_config":{
+    "learning_rate": 0.0007323103426900496,
+    "n_steps": 1024,
+    "batch_size": 64,
+    "n_epochs": 16,
+    "gamma": 0.9808879903695523,
+    "gae_lambda": 0.9342989146211725,
+    "clip_range": 0.2853588191303361,
+    "ent_coef": 0.0003655153690122701,
+    "vf_coef": 0.9006560000773626,
+    "max_grad_norm": 1.7794763369538222,
+    "policy_kwargs": {
+        "net_arch": {
+            "pi": [1024, 512, 256],
+            "vf": [1024, 512, 256]
+        }
+    }
+  }
+}

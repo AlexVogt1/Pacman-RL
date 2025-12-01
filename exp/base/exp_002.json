@@ -1,7 +1,7 @@
 {
   "exp_config": {
-    "project": "pacman-rl-test",
-    "name": "pacman-rl-PPO-optimal",
+    "project": "pacman-rl-cluster",
+    "name": "pacman-rl-PPO-optimal-full",
     "description": "Training best agent from original cluster optuna search on full integer grid obs",
     "pacman_path": "./pacman_builds/linux/full_grid_data_obs_server/AiPerPacman.x86_64"
   },
@@ -16,8 +16,11 @@
     "ent_coef": 0.0003454485588167861,
     "vf_coef": 0.8739347300355585,
     "max_grad_norm": 1.783894506233313,
-    "net_arch": {
-      "pi": [1024, 512, 256],
-      "vf": [1024, 512, 256]}
+    "policy_kwargs": {
+        "net_arch": {
+            "pi": [1024, 512, 256],
+            "vf": [1024, 512, 256]
+        }
+    }
   }
 }
