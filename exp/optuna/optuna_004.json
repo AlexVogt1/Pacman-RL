@@ -1,0 +1,7 @@
+{
+  "study_name": "ppo_pacman_optuna_step_reward",
+  "wandb_project": "ppo-pacman-optuna-step-reward",
+  "env_path": "./pacman_builds/linux/full_grid_data_obs_pellet_reward_server",
+  "train_steps": 600000 ,
+  "sim_speed": 3
+}

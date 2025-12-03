@@ -1,0 +1,8 @@
+{
+  "study_name": "ppo_pacman_optuna_step_reward",
+  "wandb_project": "ppo-pacman-optuna-step-reward",
+  "env_path": "./pacman_builds/linux/full_grid_data_obs_step_reward_server/AiPerPacman.x86_64",
+  "description": "Experiment where the step reward was increased from 0.025 to 0.05",
+  "train_steps": 700000 ,
+  "sim_speed": 3
+}

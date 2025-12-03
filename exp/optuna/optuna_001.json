@@ -1,0 +1,8 @@
+{
+  "study_name": "ppo_pacman_optuna_test",
+  "wandb_project": "ppo-pacman-optuna-test",
+  "env_path": "./pacman_builds/linux/full_grid_data_obs_reward_server/AiPerPacman.x86_64",
+  "description": "Experiment increasing the pellet reward to 20 since increasing it from 10 to 15 was very promising",
+  "train_steps": 700000,
+  "sim_speed": 3
+}

@@ -1,0 +1,8 @@
+{
+  "study_name": "ppo_pacman_optuna_ghost_reward",
+  "wandb_project": "ppo-pacman-optuna-ghost-reward",
+  "env_path": "./pacman_builds/linux/full_grid_data_obs_eaten_by_ghost_reward_server/AiPerPacman.x86_64",
+  "description": "Experiment increasing the reward for being eaten by ghosts from -500 to -750",
+  "train_steps": 700000 ,
+  "sim_speed": 3
+}
