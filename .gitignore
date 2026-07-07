@@ -9,4 +9,6 @@ logs/
 !pacman_builds/grid_data_obs
 !pacman_builds/linux/grid_data_obs
 !pacman_builds/linux/grid_data_obs_server
+!models/general_behavelets/Aggression/best_model.zip
+!models/general_behavelets/Speed/best_model.zip
 runs/
