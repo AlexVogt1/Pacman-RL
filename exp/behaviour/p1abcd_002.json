@@ -1,0 +1,30 @@
+{
+  "exp_config": {
+    "project": "pacman-rl-behavlets",
+    "name": "pacman-rl-PPO-P1abcd-002",
+    "description": "Training trail 18 from cluster optuna search on full obs and increased pellet reward of 20 with 100 ghost",
+    "pacman_path": "./pacman_builds/linux/base_1/AiPerPacman.x86_64",
+    "continue_training": false,
+    "pretrained_model_path": "./logs/pacman-rl-cluster/pacman-rl-PPO-Trial-284-Single-life-no-ghost-02-kl/models/best_model.zip",
+    "step_penalty": -0.0
+  },
+  "ppo_config":{
+    "learning_rate": 0.00011192308902462111,
+    "n_steps": 1024,
+    "batch_size": 1024,
+    "n_epochs": 11,
+    "gamma": 0.9998945953018723,
+    "gae_lambda": 0.914458711954122,
+    "clip_range": 0.1520364094910921,
+    "ent_coef": 1.4138149802796582e-05,
+    "vf_coef": 0.9178532932204714,
+    "max_grad_norm": 2.4678699357013683,
+    "policy_kwargs": {
+        "net_arch": {
+            "pi": [512, 512],
+            "vf": [512, 512]
+        },
+        "activation_fn": "leakyRelu"
+    }
+  }
+}

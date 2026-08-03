@@ -242,16 +242,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
     n_steps = trial.suggest_categorical("n_steps", [128, 256, 512, 1024, 2048])
 
     # 3. Batch size must be <= n_steps, affects gradient quality
-    valid_batch_sizes = [bs for bs in [32, 64, 128, 256, 512] if bs <= n_steps]
-    if valid_batch_sizes:
-        # Sample from valid options
-        batch_size = trial.suggest_categorical("batch_size_resampled", valid_batch_sizes)
-        # if trial.number == 0 or trial.number % 10 == 0:  # Log occasionally to avoid spam
-        #     print(f"Trial {trial.number}: Resampled batch_size to {batch_size} (n_steps={n_steps})")
-    else:
-        # Fallback: use n_steps as batch_size
-        batch_size = n_steps
-        print(f"Trial {trial.number}: Using batch_size={n_steps} (same as n_steps)")
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
 
     # 4. Number of epochs - how many times to reuse collected data
     n_epochs = trial.suggest_int("n_epochs", 3, 30)
@@ -280,7 +271,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
         "small": [dict(pi=[64, 64], vf=[64, 64])],
         "medium": [dict(pi=[128, 128], vf=[128, 128])],
         "large": [dict(pi=[256, 256], vf=[256, 256])],
-        "extra-large": [dict(pi=[512, 512], vf=[512, 512])],
+        "extra_large": [dict(pi=[512, 512], vf=[512, 512])],
         "XX-large": [dict(pi=[1024, 1024], vf=[512, 512])],
         "XXX-large": [dict(pi=[2048, 2048], vf=[512,512])],
         "extra_large_deep": [dict(pi=[512, 512, 256], vf=[512, 512, 256])],
@@ -366,7 +357,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
         )
         callbacks.append(eval_callback)
 
-        # Train the model (100k steps = ~50 episodes)
+        # Train the model
         model.learn(
             total_timesteps=200000,
             callback=callbacks,
@@ -533,7 +524,7 @@ def optimize_hyperparameters(n_trials=100,timeout=None, n_jobs=1, study_name="pp
     sampler = TPESampler(n_startup_trials=10, seed=42)
     pruner = MedianPruner(n_startup_trials=5, n_warmup_steps=3)
     pruner_config = PatientPruner(
-        PercentilePruner(percentile=50.0, n_warmup_steps=3), # i report eval id not steps so 3 * 50 000 = 150000
+        PercentilePruner(n_startup_trials=5,percentile=50.0, n_warmup_steps=3), # i report eval id not steps so 3 * 50 000 = 150000
         patience=1
     )
 

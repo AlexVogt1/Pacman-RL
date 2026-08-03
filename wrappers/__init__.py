@@ -14,6 +14,10 @@ from .caution_wrapper import (
     C1bCautionWrapper,
     C2aCautionWrapper,
     C2bCautionWrapper,
+    C4CautionWrapper,
+    C5CautionWrapper,
+    C6CautionWrapper,
+    C7CautionWrapper,
 )
 from .thoroughness_wrapper import (
     T1ThoroughnessWrapper,
@@ -21,8 +25,21 @@ from .thoroughness_wrapper import (
 )
 from .aggression_wrapper import (
     A1AggressionWrapper,
+    A2AggressionWrapper,
     A3AggressionWrapper,
     A6AggressionWrapper,
+)
+from .planning_wrapper import (
+    P1aPlanningWrapper,
+    P1bPlanningWrapper,
+    P1cPlanningWrapper,
+    P1dPlanningWrapper,
+    P3PlanningWrapper,
+    P4aPlanningWrapper,
+    P4bPlanningWrapper,
+)
+from .resource_hoarding_wrapper import (
+    R1ResourceHoardingWrapper,
 )
 
 from. pacman_wrapper import (
@@ -39,11 +56,24 @@ __all__ = [
     'C1bCautionWrapper',
     'C2aCautionWrapper',
     'C2bCautionWrapper',
+    'C4CautionWrapper',
+    'C5CautionWrapper',
+    'C6CautionWrapper',
+    'C7CautionWrapper',
     'T1ThoroughnessWrapper',
     'T2ThoroughnessWrapper',
     'A1AggressionWrapper',
+    'A2AggressionWrapper',
     'A3AggressionWrapper',
     'A6AggressionWrapper',
+    'P1aPlanningWrapper',
+    'P1bPlanningWrapper',
+    'P1cPlanningWrapper',
+    'P1dPlanningWrapper',
+    'P3PlanningWrapper',
+    'P4aPlanningWrapper',
+    'P4bPlanningWrapper',
+    'R1ResourceHoardingWrapper',
     'wrap_env',
 ]
 

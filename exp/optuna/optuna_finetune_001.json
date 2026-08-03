@@ -1,0 +1,9 @@
+{
+  "study_name": "ppo_pacman_optuna_finetune_test-1",
+  "wandb_project": "ppo-pacman-optuna-fintune-test-1",
+  "env_path": "./pacman_builds/big_pellet_big_step/AiPerPacman.exe",
+  "description": "Experiment decreasing the reward for eating ghosts from 200 to 0 pellet from 15 to 20 and 10x the step",
+  "train_steps": 3000000,
+  "base_model_path": "./logs/cluster/pacman-rl-PPO-Trial-911-No-Ghost-Big-Pellet-Big-Step/models/best_model.zip",
+  "sim_speed": 3
+}

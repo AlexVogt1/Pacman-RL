@@ -27,11 +27,21 @@ from mlagents_envs.side_channel.engine_configuration_channel import (
 import numpy as np
 from gym import Env
 
-NUM_ENVS = 4
+NUM_ENVS = 8
 FRAME_SKIP=True
 FRAMES_TO_SKIP=4
 ENV_PATH=None
 
+#dict is {name: index in obs}
+base_custom_metric_dict = {
+    "pellets_collected": 25,
+    "ghost_1_distance": 30,
+    "ghost_2_distance": 31,
+    "ghost_3_distance": 32,
+    "ghost_4_distance": 33,
+    "lives_remaining": 24,
+    "score":23,
+}
 # Default values from CLI (See cli_utils.py)
 DEFAULT_ENGINE_CONFIG = EngineConfig(
     width=584,
@@ -120,7 +130,7 @@ def make_mla_sb3_env(config: LimitedConfig, **kwargs: Any) -> VecEnv:
             # new_env = observation_lambda_v0(new_env, handle_obs, handle_obs_space)
             #frameskip wrap
             if FRAME_SKIP:
-                return wrap_env(new_env, skip=FRAMES_TO_SKIP)
+                return wrap_env(new_env, skip=FRAMES_TO_SKIP, wrap_reward='normalise')
             else:
                 return new_env
 
@@ -172,7 +182,7 @@ def make_mla_sb3_eval_env(config: LimitedConfig, **kwargs: Any) -> VecEnv:
             # new_env = observation_lambda_v0(new_env, handle_obs, handle_obs_space)
             #frameskip wrap
             if FRAME_SKIP:
-                return wrap_env(new_env, skip=FRAMES_TO_SKIP)
+                return wrap_env(new_env, skip=FRAMES_TO_SKIP, wrap_reward='normalise')
             else:
                 return new_env
 
@@ -236,6 +246,7 @@ class CustomMetricEvalCallback(EvalCallback):
             verbose=1,
             warn=True,
             use_wandb=False,
+            custom_metric_dict=None,
             custom_metric_idx=None,
             custom_metric_name="custom_metric"
     ):
@@ -281,6 +292,7 @@ class CustomMetricEvalCallback(EvalCallback):
                 episode_rewards = []
                 episode_lengths = []
                 episode_custom_metrics = []
+                custom_metrics_array =[]
 
                 for episode_idx in range(self.n_eval_episodes):
                     obs = self.eval_env.reset()
@@ -290,6 +302,7 @@ class CustomMetricEvalCallback(EvalCallback):
                     episode_length = 0
                     last_obs = obs
                     obs_list = []
+
 
 
                     while not done:
@@ -310,14 +323,26 @@ class CustomMetricEvalCallback(EvalCallback):
                     # Extract custom metric from last observation
                     last_obs = obs_list[-2]
                     try:
-                        # Handle vectorized env (shape: (1, obs_dim))
-                        if isinstance(last_obs, np.ndarray) and last_obs.ndim > 1:
-                            custom_value = float(last_obs[0][self.custom_metric_idx])
-                        else:
-                            custom_value = float(last_obs[self.custom_metric_idx])
+                        for metric_name, metric_idx in base_custom_metric_dict.items():
+                            # Handle vectorized env (shape: (1, obs_dim))
+                            if isinstance(last_obs, np.ndarray) and last_obs.ndim > 1:
+                                custom_value = float(last_obs[0][metric_idx])
+                            else:
+                                custom_value = float(last_obs[metric_idx])
 
-                        custom_value = (1-custom_value)*244
-                        episode_custom_metrics.append(custom_value)
+                            if metric_name == "pellets_collected":
+                                custom_value = (1-custom_value)*244
+                                episode_custom_metrics.append(custom_value)
+                            elif metric_name == "lives_remaining":
+                                custom_value = custom_value * 3
+                                episode_custom_metrics.append(custom_value)
+                            elif metric_name == "score":
+                                custom_value = custom_value * 3200
+                                episode_custom_metrics.append(custom_value)
+                            else:
+                                episode_custom_metrics.append(custom_value)
+                        custom_metrics_array.append(episode_custom_metrics)
+                        episode_custom_metrics= []
                     except (IndexError, TypeError) as e:
                         if self.verbose > 0:
                             print(f"Warning: Could not extract custom metric: {e}")
@@ -332,6 +357,7 @@ class CustomMetricEvalCallback(EvalCallback):
                 mean_ep_length = np.mean(episode_lengths)
                 mean_custom_metric = np.mean(episode_custom_metrics)
                 std_custom_metric = np.std(episode_custom_metrics)
+                print(episode_custom_metrics)
 
                 # Update internal state
                 self.last_mean_reward = mean_reward
@@ -418,6 +444,18 @@ class CustomMetricEvalCallback(EvalCallback):
 
         return True
 
+def make_kwargs(activation_fn_name): #TODO: add net_arch to this function
+
+    if activation_fn_name == "tanh":
+        activation_fn = torch.nn.Tanh
+    elif activation_fn_name == "relu":
+        activation_fn = torch.nn.ReLU
+    elif activation_fn_name == "leakyRelu":
+        activation_fn = torch.nn.LeakyReLU
+    else:
+        activation_fn = torch.nn.Mish
+    return activation_fn
+
 def train_ppo_unity_baseline(env_path: str,
                              model_save_path: str,
                              timesteps: int = 1_000_000,
@@ -470,10 +508,13 @@ def train_ppo_unity_baseline(env_path: str,
         best_model_save_path=f"./{model_save_path}/models",
         log_path=f"./{model_save_path}/evaluations",
         use_wandb=True,
+        custom_metric_dict=base_custom_metric_dict,
         custom_metric_idx=25,  # Index of score/lives/pellets in observation
         custom_metric_name="pellets_collected"  # Name for logging
     )
-
+    #process kwargs
+    sb3_kwargs = dict(net_arch=config['policy_kwargs']["net_arch"],activation_fn=make_kwargs(config['policy_kwargs']["activation_fn"]))
+    print(sb3_kwargs)
     # Create PPO model
     model = PPO("MlpPolicy", env,
                 learning_rate=config['learning_rate'],
@@ -486,7 +527,7 @@ def train_ppo_unity_baseline(env_path: str,
                 ent_coef=config['ent_coef'],
                 vf_coef=config['vf_coef'],
                 max_grad_norm=config['max_grad_norm'],
-                policy_kwargs=config['policy_kwargs'],
+                policy_kwargs=sb3_kwargs,
                 verbose=1, tensorboard_log=os.path.join(model_save_path, "tensorboard"),device='cpu',seed=42)
     # model = DQN("MlpPolicy", env,
     #             train_freq=config["train_freq"],
@@ -510,7 +551,7 @@ def train_ppo_unity_baseline(env_path: str,
 
 def parse_args():
     parser = argparse.ArgumentParser("Pacman Training")
-    parser.add_argument("--json_path", type=str, default="./exp/base/exp_001.json",
+    parser.add_argument("--json_path", type=str, default="./exp/base/exp_001",
                         help="directory for expeiment parameters")
 
     return parser.parse_args()

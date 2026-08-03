@@ -3,21 +3,26 @@
     "project": "pacman-rl-test",
     "name": "pacman-rl-PPO-optimal",
     "description": "Training best agent from original cluster optuna search on binary grid obs",
-    "pacman_path": "./pacman_builds/linux/grid_data_obs_server/AiPerPacman.x86_64"
+    "pacman_path": "./pacman_builds/big_pellet_big_step/AiPerPacman.exe"
   },
-  "ppo_config":{
-    "learning_rate": 0.0006990621869504165,
-    "n_steps": 1024,
-    "batch_size": 64,
-    "n_epochs": 18,
-    "gamma": 0.9534616960108563,
-    "gae_lambda": 0.9343134125713539,
-    "clip_range": 0.28569923127458147,
-    "ent_coef": 0.0003454485588167861,
-    "vf_coef": 0.8739347300355585,
-    "max_grad_norm": 1.783894506233313,
-    "net_arch": {
-      "pi": [1024, 512, 256],
-      "vf": [1024, 512, 256]}
+  "ppo_config": {
+  "learning_rate": 0.0003,
+  "n_steps": 2048,
+  "batch_size": 64,
+  "n_epochs": 10,
+  "gamma": 0.995,
+  "gae_lambda": 0.95,
+  "clip_range": 0.2,
+  "ent_coef": 0.01,
+  "vf_coef": 0.5,
+  "max_grad_norm": 0.5,
+  "target_kl": 0.05,
+  "policy_kwargs": {
+      "net_arch": {
+          "pi": [1024, 512, 256],
+          "vf": [1024, 512, 256]
+      },
+    "activation_fn": "leakyRelu"
   }
+}
 }

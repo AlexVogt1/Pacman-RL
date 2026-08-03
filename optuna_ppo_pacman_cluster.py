@@ -243,9 +243,11 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
         )
 
     # MOST IMPORTANT HYPERPARAMETERS FOR PPO
+    # TODO: Add add conditional hyperparam to see if optimisers should be reset or not
+    reset_optimisers = trial.suggest_categorical("reset_optimiser", [True, False])
 
     # 1. Learning rate - affects convergence speed
-    learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True)
+    learning_rate = trial.suggest_float("learning_rate", 1e-8, 1e-3, log=True)
 
     # 2. Number of steps per update - critical for PPO performance
     # With 2000-step episodes: 512=1/4 episode, 2048=1 episode, 4096=2 episodes
@@ -275,20 +277,9 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
     # 10. Max gradient norm - prevents unstable updates
     max_grad_norm = trial.suggest_float("max_grad_norm", 0.3, 2.0)
 
-    # 11. Network architecture - model capacity
-    net_arch_type = trial.suggest_categorical("net_arch", ['extra_large', 'XX-large', 'XXX-large', 'extra_large_deep', 'huge', 'massive'])
-    net_arch_map = {
-        "small": [dict(pi=[64, 64], vf=[64, 64])],
-        "medium": [dict(pi=[128, 128], vf=[128, 128])],
-        "large": [dict(pi=[256, 256], vf=[256, 256])],
-        "extra_large": [dict(pi=[512, 512], vf=[512, 512])],
-        "XX-large": [dict(pi=[1024, 1024], vf=[512, 512])],
-        "XXX-large": [dict(pi=[2048, 2048], vf=[512,512])],
-        "extra_large_deep": [dict(pi=[512, 512, 256], vf=[512, 512, 256])],
-        "huge": [dict(pi=[1024, 512, 256], vf=[1024, 512, 256])],
-        "massive": [dict(pi=[2048, 1024, 512], vf=[2048, 1024, 512])]
-    }
-    net_arch = net_arch_map[net_arch_type]
+    #11. Number of environments
+    n_envs = trial.suggest_categorical("n_envs", [16, 32])
+    NUM_ENVS = n_envs
 
     # Create environments (PPO requires vectorized env)
 
@@ -315,7 +306,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
                 "ent_coef": ent_coef,
                 "vf_coef": vf_coef,
                 "max_grad_norm": max_grad_norm,
-                "net_arch": net_arch_type,
+                # "net_arch": net_arch_type,
             })
 
         # Validate batch_size <= n_steps
@@ -336,7 +327,7 @@ def objective(trial, wandb_project="ppo-pacman-optuna", use_wandb=True):
             ent_coef=ent_coef,
             vf_coef=vf_coef,
             max_grad_norm=max_grad_norm,
-            policy_kwargs=dict(net_arch=net_arch),
+            # policy_kwargs=dict(net_arch=net_arch),
             verbose=1,
             tensorboard_log=f"{SAVE_PATH}/runs/trial_{trial.number}" if use_wandb else None,
             # device="cuda" if torch.cuda.is_available() else "cpu",

@@ -21,10 +21,14 @@ GHOST_DISTANCE_SLICE = slice(30, 34)  # Ghost distances array (float[4], Manhatt
 # Largest possible Manhattan distance on the 26x29 grid, used to normalise distances.
 MAX_MANHATTAN = (GRID_WIDTH - 1) + (GRID_HEIGHT - 1)
 
-# Grid cell range for ghosts (5 = home ... 9 = eaten) and the eaten value.
+# Grid cell range for ghosts (5 = home ... 9 = eaten) and notable states.
 GHOST_MIN = 5
 GHOST_MAX = 9
+GHOST_FRIGHTENED = 8
 GHOST_EATEN = 9
+
+# Grid cell value for the cherry.
+CHERRY = 10
 
 
 def _is_attacking(obs: Any) -> bool:
@@ -74,6 +78,34 @@ def _count_eaten_ghosts(grid: np.ndarray) -> int:
     return int(np.count_nonzero(grid == GHOST_EATEN))
 
 
+def _cherry_cell(grid: np.ndarray) -> Optional[Tuple[int, int]]:
+    """Return the cherry's (row, col) in the grid, or None if no cherry is out."""
+    rows, cols = np.where(grid == CHERRY)
+    if len(rows) == 0:
+        return None
+    return int(rows[0]), int(cols[0])
+
+
+def _nearest_frightened_distance(grid: np.ndarray) -> Optional[float]:
+    """
+    Manhattan distance from Pacman to the nearest frightened ghost.
+
+    Args:
+        grid: The (height, width) game grid.
+
+    Returns:
+        The smallest distance to a frightened ghost (grid value 8), or None if
+        there is no frightened ghost or Pacman is not on the grid.
+    """
+    cell = _pacman_cell(grid)
+    if cell is None:
+        return None
+    rows, cols = np.where(grid == GHOST_FRIGHTENED)
+    if len(rows) == 0:
+        return None
+    return float(np.min(np.abs(rows - cell[0]) + np.abs(cols - cell[1])))
+
+
 def _reset_obs(data: Any) -> Any:
     """Extract the observation from a Gym (obs) or Gymnasium (obs, info) reset return."""
     if isinstance(data, tuple) and len(data) == 2:
@@ -119,6 +151,87 @@ class A1AggressionWrapper(gym.Wrapper):
         distance = abs(cell[0] - self._house[0]) + abs(cell[1] - self._house[1])
         if distance <= self.house_distance:
             reward += self.bonus
+        return reward
+
+    def step(self, action: Any):
+        data = self.env.step(action)
+
+        # 4 values: Unity / old Gym API
+        if len(data) == 4:
+            obs, reward, done, info = data
+            reward = self._shape_reward(obs, reward)
+            return obs, reward, done, info
+
+        # 5 values: Gymnasium API
+        elif len(data) == 5:
+            obs, reward, terminated, truncated, info = data
+            reward = self._shape_reward(obs, reward)
+            return obs, reward, terminated, truncated, info
+
+
+class A2AggressionWrapper(gym.Wrapper):
+    """
+    Aggression behaviour A2 - Chase Ghosts or Eat New Cherry.
+
+    Encourages staying on the ghost chase when a cherry appears mid-hunt rather
+    than abandoning it for the cherry. Two toggleable signals, both active only
+    while Pacman is attacking and a cherry is out:
+      - penalise_abandon: per-step penalty when Pacman moves away from the
+        nearest frightened ghost (its Manhattan distance rises between steps).
+      - penalise_cherry: one-off penalty when the cherry is eaten (it vanishes
+        with Pacman beside its cell, as in R1ResourceHoardingWrapper).
+
+    Args:
+        env: The environment to wrap
+        abandon_penalty: Penalty per step spent moving away from the nearest
+            frightened ghost (default: 5.0)
+        cherry_penalty: Penalty for eating the cherry while attacking (default: 20.0)
+        eat_distance: Manhattan distance from Pacman to the cherry's last cell
+            for a disappearance to count as eaten (default: 2.0)
+        penalise_abandon: Enable the moving-away penalty (default: True)
+        penalise_cherry: Enable the cherry-eaten penalty (default: True)
+    """
+
+    def __init__(self, env: gym.Env, abandon_penalty: float = 5.0,
+                 cherry_penalty: float = 20.0, eat_distance: float = 2.0,
+                 penalise_abandon: bool = True, penalise_cherry: bool = True):
+        super().__init__(env)
+        self.abandon_penalty = abs(abandon_penalty)
+        self.cherry_penalty = abs(cherry_penalty)
+        self.eat_distance = eat_distance
+        self.penalise_abandon = penalise_abandon
+        self.penalise_cherry = penalise_cherry
+
+        self._prev_ghost_dist: Optional[float] = None
+        self._cherry: Optional[Tuple[int, int]] = None
+
+    def reset(self, **kwargs):
+        data = self.env.reset(**kwargs)
+        grid = _reshape_grid(_reset_obs(data))
+        self._prev_ghost_dist = _nearest_frightened_distance(grid)
+        self._cherry = _cherry_cell(grid)
+        return data
+
+    def _shape_reward(self, obs: Any, reward: float) -> float:
+        grid = _reshape_grid(obs)
+        cherry = _cherry_cell(grid)
+        ghost_dist = _nearest_frightened_distance(grid)
+
+        if _is_attacking(obs):
+            if (self.penalise_abandon and cherry is not None
+                    and ghost_dist is not None and self._prev_ghost_dist is not None
+                    and ghost_dist > self._prev_ghost_dist):
+                reward -= self.abandon_penalty
+
+            if self.penalise_cherry and cherry is None and self._cherry is not None:
+                cell = _pacman_cell(grid)
+                if cell is not None:
+                    distance = abs(cell[0] - self._cherry[0]) + abs(cell[1] - self._cherry[1])
+                    if distance <= self.eat_distance:
+                        reward -= self.cherry_penalty
+
+        self._prev_ghost_dist = ghost_dist
+        self._cherry = cherry
         return reward
 
     def step(self, action: Any):
