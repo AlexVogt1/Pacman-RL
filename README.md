@@ -54,12 +54,12 @@ to `True` to enable that wrapper. The example below is the config used for the `
 (all four planning behavlets on, everything else off):
 ```python
 base_cfg = {
-    "Sp1": False, "Sp2": False,
-    "C1a": False, "C1b": False, "C2a": False, "C2b": False,
-    "C4": False, "C5": False, "C6": False, "C7": False,
-    "A1": False, "A2": False, "A3": False, "A6": False,
+    "Sp1": None, "Sp2": None,
+    "C1a": None, "C1b": None, "C2a": None, "C2b": None,
+    "C4": None, "C5": None, "C6": None, "C7": None,
+    "A1": None, "A2": None, "A3": None, "A6": None,
     "P1a": True, "P1b": True, "P1c": True, "P1d": True,
-    "P3": False, "P4a": False, "P4b": False,
+    "P3": None, "P4a": None, "P4b": None,
 }
 ```
 A key can also be given a dictionary instead of `True` to override that wrapper's reward

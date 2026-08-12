@@ -37,32 +37,37 @@ STEP_REWARD = None
 CAUTION = None
 AGGRESSION = None
 base_cfg = {
-    "Sp1":False,
-    "Sp2":False,
-    "C1a":False,
-    "C1b":False,
-    "C2a":False,
-    "C2b":False,
-    # "C3":False,
-    "C4":False,
-    "C5":False,
-    "C6":False,
-    "C7":False,
-    "A1":False,
-    "A2":False,
-    "A3":False,
-    # "A4":False,
-    # "A5":False,
-    "A6":False,
+    # "Sp1":None,
+    # "Sp2":None,
+    # "C1a":None,
+    # "C1b":None,
+    # "C2a":None,
+    # "C2b":None,
+    # # "C3":None,
+    # "C4":None,
+    # "C5":None,
+    # "C6":None,
+    # "C7":None,
+    # "A1":None,
+    # "A2":None,
+    # "A3":None,
+    # # "A4":None,
+    # # "A5":None,
+    # "A6":None,
     "P1a":True,
     "P1b":True,
     "P1c":True,
     "P1d":True,
-    "P3":False,
-    "P4a":False,
-    "P4b":False,
+    # "P3":None,
+    # "P4a":None,
+    # "P4b":None,
 }
-
+# t1_custom_cfg ={
+#     "T1": {'use_penalise_leaving':False,'stay_bonus':15 }
+# }
+# t1_default={'T1':True}
+# P1all={"P1a":True}
+# base_cfg = P1all
 #dict is {name: index in obs}
 base_custom_metric_dict = {
     "pellets_collected": 25,

@@ -48,7 +48,7 @@ MOVE_DIR_X, MOVE_DIR_Y = 5, 6
 ## Global Variables for data collection ##
 ##########################################
 CONFIG_INT = 6 # INTEGER TO DESIGNATE WITH AGENT CONFIG TO USE FROM BELOW
-NUM_EPISODES = 5 # number of episodes to record
+NUM_EPISODES = 2 # number of episodes to record
 
 pacman_configs= {
     0 :{
@@ -75,6 +75,7 @@ pacman_configs= {
         'name': 'Caution 1 a & b',
         "best_agent_path":"./models/behavlets/Pacman-rl-PPO-C1ab-003_1/models/best_model",
         "final_agent_path":"./models/behavlets/Pacman-rl-PPO-C1ab-003_1/PPO_pacman",
+        # "check": "dir",
         "env_path":"./pacman_builds/base_0/AiPerPacman.exe",
         "reward_cfg": {
             "C1a": True,
@@ -139,6 +140,7 @@ pacman_configs= {
             "P1d": True,
         }
     }
+
 }
 
 
@@ -169,7 +171,7 @@ if __name__ == '__main__':
     env = UnityToGymWrapper(unity_env, uint8_visual=True, allow_multiple_obs=False)
     env = wrap_env(env, skip=4, wrap_reward='normalise', step_reward=-0.0, cfg=pacman_configs[CONFIG_INT]["reward_cfg"])
     print(pacman_configs[CONFIG_INT]["reward_cfg"])
-    model_path = pacman_configs[CONFIG_INT]["best_agent_path"]
+    model_path = pacman_configs[CONFIG_INT]["final_agent_path"]
     # model_path = pacman_configs[0]["final_agent_path"]
     model = PPO.load(model_path, device='cpu')
 

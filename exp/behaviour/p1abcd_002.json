@@ -26,5 +26,6 @@
         },
         "activation_fn": "leakyRelu"
     }
-  }
+  },
+  "base_cfg": {'T1':true}
 }

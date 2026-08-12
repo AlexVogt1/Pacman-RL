@@ -36,3 +36,4 @@
 | Clearing level           |       +1000       |
 | Eaten By Ghost           |       -500        |
 | Loosing all lives        |       -1000       |
+| Cherry                   |       +100        |
